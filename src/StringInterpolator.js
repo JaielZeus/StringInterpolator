@@ -129,7 +129,7 @@ class StringInterpolator {
 
     if (validName && validCallback) {
       lookup[key] = (data, content) => {
-        const replacement = key + (isVar ? EMPTY : `(${content})`);
+        const replacement = key + (isVar ? EMPTY : `${this.leftDelimiter}${content}${this.rightDelimiter}`);
         const message = `Couldn't replace ${type} "${replacement}"`;
         if (!isFunction(callback)) {
           return String(callback);
@@ -236,7 +236,7 @@ class StringInterpolator {
           meta.key = EMPTY;
           meta.search = EMPTY;
         } else if (end) {
-          meta.result += `${meta.key}(${meta.search}`;
+          meta.result += `${meta.key}${this.leftDelimiter}${meta.search}`;
         }
       } else if (left && this.functions[meta.search]) {
         meta.imbalance = left;

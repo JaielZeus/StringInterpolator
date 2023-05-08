@@ -1,6 +1,6 @@
 {
   "name": "@jaielzeus/stringinterpolator",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "String interpolation for texts using variable and function tokens",
   "main": "src/StringInterpolator.js",
   "scripts": {

@@ -192,10 +192,11 @@ const data = {
   some: 'data',
 };
 
-const text = 'Some text...';
+const text = 'Some text with some $some...';
 
 const result = interpolator.process(text, data);
 
+// Some text with some data...
 console.log(result);
 ```
 
