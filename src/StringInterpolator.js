@@ -189,7 +189,7 @@ class StringInterpolator {
       }
     } catch (e) {
       this.printLog(e);
-      meta.result += e.replacement + meta.search.substring(meta.key.length);
+      meta.result += e.replacement + (isVar ? meta.search.substring(meta.key.length) : EMPTY);
     }
   }
 
