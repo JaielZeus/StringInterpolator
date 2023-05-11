@@ -120,7 +120,7 @@ class StringInterpolator {
    * @param {string} name the name of the variable or function
    * @param {string|number|function} callback the callback to add to the functions or variables lookup map
    */
-  addCallback(isVar, name, callback = null) {
+  addCallback(isVar, name, callback = null, self = false) {
     const validName = isValidString(name);
     const validCallback = isBoolean(callback) || isNumber(callback) || isString(callback) || isFunction(callback);
     const key = `${this.marker}${name}`;
@@ -128,22 +128,26 @@ class StringInterpolator {
     const lookup = isVar ? this.variables : this.functions;
 
     if (validName && validCallback) {
-      lookup[key] = (data, content) => {
-        const replacement = key + (isVar ? EMPTY : `${this.leftDelimiter}${content}${this.rightDelimiter}`);
-        const message = `Couldn't replace ${type} "${replacement}"`;
-        if (!isFunction(callback)) {
-          return String(callback);
-        }
-        try {
-          const result = callback(data, isVar ? undefined : content);
-          if (!isBoolean(result) && !isNumber(result) && !isString(result)) {
-            throw new InvalidInterpolationException(message, replacement);
+      const value = {
+        self,
+        exec: (data, content) => {
+          const replacement = key + (isVar ? EMPTY : `${this.leftDelimiter}${content}${this.rightDelimiter}`);
+          const message = `Couldn't replace ${type} "${replacement}"`;
+          if (!isFunction(callback)) {
+            return String(callback);
           }
-          return String(result);
-        } catch (error) {
-          throw error instanceof InvalidInterpolationException ? error : new InvalidInterpolationException(message, replacement);
-        }
+          try {
+            const result = callback(data, isVar ? undefined : content);
+            if (!isBoolean(result) && !isNumber(result) && !isString(result)) {
+              throw new InvalidInterpolationException(message, replacement);
+            }
+            return String(result);
+          } catch (error) {
+            throw error instanceof InvalidInterpolationException ? error : new InvalidInterpolationException(message, replacement);
+          }
+        },
       };
+      lookup[key] = value;
     } else if (!validName) {
       this.printLog(`Couldn't add ${type} "${this.marker}${name}" because the name was invalid!`);
     } else {
@@ -165,8 +169,8 @@ class StringInterpolator {
    * @param {string} name the name of the function
    * @param {function|string|number} callback the callback to add to the functions lookup map
    */
-  addFunction(name, callback = null) {
-    this.addCallback(FUNCTION, name, callback);
+  addFunction(name, callback = null, self = false) {
+    this.addCallback(FUNCTION, name, callback, self);
   }
 
   /**
@@ -183,9 +187,9 @@ class StringInterpolator {
   fillResult(isVar, meta, data, depth) {
     try {
       if (isVar) {
-        meta.result += (meta.key ? this.process(this.variables[meta.key](data), data, depth + 1) : EMPTY) + meta.search.substring(meta.key.length);
+        meta.result += (meta.key ? this.process(this.variables[meta.key].exec(data), data, depth + 1) : EMPTY) + meta.search.substring(meta.key.length);
       } else {
-        meta.result += this.process(this.functions[meta.key](data, this.process(meta.search, data, depth + 1)), data, depth + 1);
+        meta.result += this.process(this.functions[meta.key].exec(data, this.functions[meta.key].self ? meta.search : this.process(meta.search, data, depth + 1)), data, depth + 1);
       }
     } catch (e) {
       this.printLog(e);

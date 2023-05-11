@@ -43,8 +43,8 @@
       <a href="#%EF%B8%8F-usage">Usage</a>
       <ul>
         <li><a href="#instantiation">Instantiation</a></li>
-        <li><a href="#adding-variables">Adding variables</a></li>
-        <li><a href="#adding-functions">Adding functions</a></li>
+        <li><a href="#variables">Variables</a></li>
+        <li><a href="#functions">Functions</a></li>
         <li><a href="#providing-literals-as-callbacks">Providing literals as callbacks</a></li>
         <li><a href="#marker-and-delimiters">Marker and Delimiters</a></li>
         <li><a href="#options">Options</a></li>
@@ -119,17 +119,31 @@ const StringInterpolator = require('@jaielzeus/stringinterpolator');
 const interpolator = new StringInterpolator();
 ```
 
-### **Adding variables**
-Add a `variable` and a `callback` function. The `callback` will be called with the provided `data` object when the token for the `variable` is replaced in the text. A `callback` function has to provide either a `boolean`, a `number` or a `string`.
+### **Variables**
+Add a `variable` and a `callback` function by calling the `addVariable(name, callback)` method. The `callback` will be called with the provided `data` object when the token for the `variable` is replaced in the text. A `callback` function has to provide either a `boolean`, a `number` or a `string`.
 ```
 interpolator.addVariable('name', (d) => d.name);
 ```
 
-### **Adding functions**
-Add a `function` and a `callback` function. The `callback` will be called with the provided `data` object and the `content` inbetween the `delimiters` when the token for the `function` is replaced in the text. A `callback` function has to provide either a `boolean`, a `number` or a `string`.
+### **Functions**
+Add a `function` and a `callback` function by calling the `addFunction(name, callback, self)` method. The `callback` will be called with the provided `data` object and the `content` inbetween the `delimiters` when the token for the `function` is replaced in the text. A `callback` function has to provide either a `boolean`, a `number` or a `string`.
 ```
 interpolator.addFunction('max', (d, c) => Math.max(...c.split(',')));
 ```
+
+Interpolator `functions` take an additional parameter `self`, which gives them the possibility to process the `content` between their delimiters by themselves. This is useful for more complex `functions` which want to process the raw `content` with their own `Stringinterpolator` instances using their own `variables` and `functions` or with other text processing methods.
+```
+function customFunction(d, c){
+  StringInterpolator custom = new StringInterpolator();
+
+  custom.addVariable('custom', 'This is a special custom variable only valid inside of the $list() function');
+
+  return custom.process(c, {});
+}
+
+interpolator.addFunction('special', customFunction, true);
+```
+The returned value of a `self` processing `function` will be interpolated normally, just not the `content` which is given to the `function` as it would usually be the case.
 
 ### **Providing literals as callbacks**
 Interpolation `variables` or `functions` can also take literals as `callbacks` (Although not so useful for `functions`).  The literals can be a `boolean`, a `number` or a `string`.
